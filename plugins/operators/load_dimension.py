@@ -25,7 +25,6 @@ class LoadDimensionOperator(BaseOperator):
         self.load_sql=load_sql
 
     def execute(self, context):
-        self.log.info('LoadDimensionOperator not implemented yet')
         # Hooks 
         redshift = PostgresHook(postgres_conn_id=self.redshift_conn_id)
         # clear out dimenson table 
