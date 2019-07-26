@@ -8,15 +8,32 @@ class DataQualityOperator(BaseOperator):
 
     @apply_defaults
     def __init__(self,
-                 # Define your operators params (with defaults) here
-                 # Example:
-                 # conn_id = your-connection-name
+                 redshift_conn_id="",
+                 table_dict=dict(),
                  *args, **kwargs):
 
         super(DataQualityOperator, self).__init__(*args, **kwargs)
-        # Map params here
-        # Example:
-        # self.conn_id = conn_id
+        self.redshift_conn_id=redshift_conn_id
+        self.table_dict=table_dict
 
     def execute(self, context):
-        self.log.info('DataQualityOperator not implemented yet')
+        # Hooks 
+        redshift_hook = PostgresHook(postgres_conn_id=self.redshift_conn_id)
+        for tbl in self.table_dict.keys():
+            # check row counts
+            self.log.info(f'Checking row count for {tbl}')
+            records = redshift_hook.get_records(f"SELECT COUNT(*) FROM {tbl}")
+            if records is None or len(records[0]) <1:
+                self.log.info(f"Row count data check failed for {tbl}")
+                raise ValueError(f"Row count data check failed for {tbl}")
+            else:
+                self.log.info(f"Row count data check passed for {tbl} ({records[0][0]} records found)")
+            
+            # check null counts 
+            self.log.info(f'Checking null count for {tbl}')
+            records = redshift_hook.get_records(f"SELECT COUNT(*) FROM {tbl} WHERE {self.table_dict[tbl]} IS NULL")
+            if records is None or len(records[0]) <1:
+                self.log.info(f"Null count data check failed for {tbl}")
+                raise ValueError(f"Null count data check failed for {tbl}")
+            else:
+                self.log.info(f"Null count data check passed for {tbl} ({records[0][0]} records found)")

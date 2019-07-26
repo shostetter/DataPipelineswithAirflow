@@ -28,7 +28,6 @@ class LoadFactOperator(BaseOperator):
     def execute(self, context):
         # Hooks 
         redshift = PostgresHook(postgres_conn_id=self.redshift_conn_id)
-        # clear out dimenson table 
         self.log.info(f"Adding data to fact table ({self.table})")
         formatted_sql = LoadFactOperator.sql.format(
             self.table,
